@@ -44,7 +44,7 @@ on:
         description: "OpenCodeReview CLI version to install"
         required: false
         type: string
-        default: "1.7.16"
+        default: "1.12.7"
       ocr-llm-max-tokens:
         description: "LLM max tokens (optional)"
         required: false
