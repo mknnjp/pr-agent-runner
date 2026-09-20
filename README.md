@@ -149,7 +149,7 @@ With the default mention `@opencode-review` (customize via the `bot-mention` inp
 | `review-comment-batch-size`     | —        | `50`                       | Max inline comments per `createReview` call                                                                             |
 | `route-severity-below`          | —        | _(unset)_                  | Route findings at-or-below this severity to the summary                                                                 |
 | `route-categories`              | —        | _(unset)_                  | Comma-separated categories routed to the summary                                                                        |
-| `ocr-version`                   | —        | `1.7.16`                   | OCR CLI version                                                                                                         |
+| `ocr-version`                   | —        | `1.12.7`                   | OCR CLI version                                                                                                         |
 | `runner-repository`             | —        | `makinosp/pr-agent-runner` | Repo hosting the runner CLI                                                                                             |
 | `runner-ref`                    | —        | `main`                     | Ref of the runner repo used for the CLI                                                                                 |
 | `node-version`                  | —        | `24`                       | Node.js version (**must be ≥ 24** — the CLI runs TS directly via type stripping)                                        |
