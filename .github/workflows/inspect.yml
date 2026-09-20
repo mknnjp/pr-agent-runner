@@ -5,9 +5,17 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: inspect-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
 
@@ -21,7 +29,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm ci
 
       - name: Typecheck
         run: pnpm typecheck
@@ -29,14 +37,20 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Cache actionlint
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/actionlint
+          key: actionlint-1.7.12
+
       - name: Lint workflow files
         shell: bash
         run: |
-          bash <(curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) 1.7.12
-          ./actionlint -color .github/workflows/*.yml examples/*.yml
+          if [ ! -x "$HOME/.cache/actionlint/actionlint" ]; then
+            mkdir -p "$HOME/.cache/actionlint"
+            bash <(curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) 1.7.12 "$HOME/.cache/actionlint"
+          fi
+          "$HOME/.cache/actionlint/actionlint" -color .github/workflows/*.yml examples/*.yml
 
-      - name: Test
-        run: pnpm test
-
-      - name: Coverage
+      - name: Test with coverage
         run: pnpm test:coverage
