@@ -1,3 +1,0 @@
-[submodule ".vendor/open-code-review"]
-	path = .vendor/open-code-review
-	url = https://github.com/alibaba/open-code-review.git
