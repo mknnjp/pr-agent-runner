@@ -1,4 +1,5 @@
-import type { ChatCliConfig, CliConfig, ReviewCliConfig, ReviewOptions } from './types.ts';
+import type { CliConfig } from './types/cli.ts';
+import type { ReviewOptions } from './types/review.ts';
 
 const parseRepo = (env: NodeJS.ProcessEnv): { readonly owner: string; readonly repo: string } => {
   const [owner, repo] = env.GITHUB_REPOSITORY?.split('/') ?? [];

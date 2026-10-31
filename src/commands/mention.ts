@@ -1,33 +1,13 @@
 import { Octokit } from '@octokit/rest';
-import type { CliDeps, ChatCliConfig } from '../types.ts';
+import type { CliDeps, ChatCliConfig } from '../types/cli.ts';
 import { info as coreInfo } from '@actions/core';
 import { answerChat, postChatReply } from '../chat/chat.ts';
 import { applyFixes, extractFixTargets } from '../chat/fix.ts';
-import { resolveLlmConfig } from '../chat/llm.ts';
+import { resolveLlmConfig } from '../chat/llm/config.ts';
 import { fetchPrContext, parseMention } from '../chat/mention.ts';
-import { postReview } from '../output/github-review.ts';
+import { postReview } from '../github/reviews.ts';
 import { parseReviewOptions } from '../config.ts';
-
-interface OcrPrResult {
-  readonly pr: Awaited<ReturnType<typeof fetchPrContext>>;
-  readonly findings: Awaited<ReturnType<typeof import('../input/loader.ts').loadFindings>>;
-}
-
-/** Run OCR against the PR diff and load the resulting findings.
- * Shared by the review re-run and auto-fix mention flows. */
-const runOcrForPr = async (
-  octokit: Octokit,
-  owner: string,
-  repo: string,
-  prNumber: number,
-  deps: CliDeps = {},
-): Promise<OcrPrResult> => {
-  const { runOcrReview } = await import('../commands/review.ts');
-  const pr = await fetchPrContext(octokit, { owner, repo }, prNumber);
-  const resultPath = await runOcrReview({ baseRef: pr.baseRef, headSha: pr.headSha }, deps);
-  const { loadFindings } = await import('../input/loader.ts');
-  return { pr, findings: await loadFindings(resultPath) };
-};
+import { runOcrForPr } from './ocr.ts';
 
 /** Execute the mention command: parse the mention and dispatch to review/fix/chat. */
 export const runMention = async (config: ChatCliConfig, deps: CliDeps = {}): Promise<void> => {
@@ -81,7 +61,7 @@ export const runMention = async (config: ChatCliConfig, deps: CliDeps = {}): Pro
   }
 
   info(`Chat question: ${payload.question}`);
-  const llmConfig = resolveLlmConfig(process.env);
+  const llmConfig = resolveLlmConfig();
   const pr = await fetchPrContext(octokit, { owner, repo }, config.prNumber);
   const answer = await answerChat(octokit, llmConfig, { owner, repo }, pr, payload.question);
   await postChatReply(octokit, { owner, repo }, config.prNumber, answer, config.botMention, config.commentId);

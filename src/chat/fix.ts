@@ -1,5 +1,5 @@
 import type { Octokit } from '@octokit/rest';
-import type { RepoRef } from '../types.ts';
+import type { RepoRef } from '../types/cli.ts';
 import type { Finding } from '../schemas/finding.ts';
 import { isInlineRightFinding } from '../domain/reviewable-lines.ts';
 import { resolveEndLine } from '../schemas/finding.ts';

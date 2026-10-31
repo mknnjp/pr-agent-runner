@@ -1,69 +1,12 @@
 import { Octokit } from '@octokit/rest';
-import type { CliDeps, ReviewCliConfig } from '../types.ts';
-import { execFile } from 'node:child_process';
-import { writeFile as fsWriteFile } from 'node:fs/promises';
-import { pathToFileURL } from 'node:url';
-import { promisify } from 'node:util';
+import type { CliDeps, ReviewCliConfig } from '../types/cli.ts';
 import { info as coreInfo, setOutput as coreSetOutput } from '@actions/core';
-import { resolveLlmConfig } from '../chat/llm.ts';
+import { resolveLlmConfig } from '../chat/llm/config.ts';
 import { fetchPrContext } from '../chat/mention.ts';
 import { composePrTitleBody } from '../chat/pr-compose.ts';
+import { runOcrReview } from './ocr.ts';
 import { loadFindings } from '../input/loader.ts';
-import { postReview } from '../output/github-review.ts';
-
-const execFileAsync = promisify(execFile);
-
-/** Run OCR against the PR diff and write findings to result.json. */
-export const runOcrReview = async (
-  refs: { readonly baseRef: string; readonly headSha: string },
-  deps: CliDeps = {},
-): Promise<string> => {
-  const {
-    execFile = execFileAsync as NonNullable<CliDeps['execFile']>,
-    writeFile = fsWriteFile as NonNullable<CliDeps['writeFile']>,
-  } = deps;
-  const env: Record<string, string | undefined> = {
-    OCR_LLM_URL: process.env.OCR_LLM_URL,
-    OCR_LLM_TOKEN: process.env.OCR_LLM_TOKEN,
-    OCR_LLM_MODEL: process.env.OCR_LLM_MODEL,
-    OCR_USE_ANTHROPIC: process.env.OCR_USE_ANTHROPIC,
-    OCR_LLM_PROTOCOL: process.env.OCR_LLM_PROTOCOL,
-  };
-  const { baseRef, headSha } = refs;
-
-  await execFile('ocr', ['llm', 'test'], { env: { ...process.env, ...env } });
-  await execFile('ocr', ['config', 'set', 'language', process.env.OCR_LANGUAGE || 'English'], {
-    env: { ...process.env, ...env },
-  });
-  await execFile('git', ['fetch', 'origin', baseRef]);
-  const { stdout: mergeBase } = await execFile('git', ['merge-base', `origin/${baseRef}`, headSha]);
-  const resultPath = 'result.json';
-  const { stdout } = await execFile(
-    'ocr',
-    ['review', '--from', mergeBase.trim(), '--to', headSha, '--format', 'json', '--audience', 'agent'],
-    { env: { ...process.env, ...env }, maxBuffer: 64 * 1024 * 1024 },
-  );
-  await writeFile(resultPath, stdout, 'utf8');
-  return resultPath;
-};
-
-interface OcrPrResult {
-  readonly pr: Awaited<ReturnType<typeof fetchPrContext>>;
-  readonly findings: Awaited<ReturnType<typeof loadFindings>>;
-}
-
-/** Run OCR against the PR diff and load the resulting findings. */
-const runOcrForPr = async (
-  octokit: Octokit,
-  owner: string,
-  repo: string,
-  prNumber: number,
-  deps: CliDeps = {},
-): Promise<OcrPrResult> => {
-  const pr = await fetchPrContext(octokit, { owner, repo }, prNumber);
-  const resultPath = await runOcrReview({ baseRef: pr.baseRef, headSha: pr.headSha }, deps);
-  return { pr, findings: await loadFindings(resultPath) };
-};
+import { postReview } from '../github/reviews.ts';
 
 /** Execute the review command: run OCR (if refs provided), optionally compose PR,
  * load findings, and post review comments. */
@@ -83,7 +26,7 @@ export const runReview = async (config: ReviewCliConfig, deps: CliDeps = {}): Pr
 
     if (config.composePr) {
       try {
-        const llmConfig = resolveLlmConfig(process.env);
+        const llmConfig = resolveLlmConfig();
         const pr = await fetchPrContext(octokit, { owner: config.owner, repo: config.repo }, config.prNumber);
         const composed = await composePrTitleBody(octokit, llmConfig, { owner: config.owner, repo: config.repo }, pr);
         if (composed) {

@@ -1,9 +1,9 @@
 import type { Octokit } from '@octokit/rest';
-import type { RepoRef } from '../types.ts';
-import type { LlmConfig } from './llm.ts';
+import type { RepoRef } from '../types/cli.ts';
+import type { LlmConfig } from './llm/config.ts';
 import type { PrContext } from './mention.ts';
 import { z } from 'zod';
-import { chat } from './llm.ts';
+import { chat } from './llm/client.ts';
 import { buildPrChatMessages } from './prompt-context.ts';
 
 const SYSTEM_PROMPT = `You are a code review assistant operating on Pull Requests.

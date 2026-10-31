@@ -1,6 +1,6 @@
 import type { Octokit } from '@octokit/rest';
-import type { RepoRef } from '../types.ts';
-import type { ChatMessage } from './llm.ts';
+import type { RepoRef } from '../types/cli.ts';
+import type { ChatMessage } from './llm/config.ts';
 import type { PrContext } from './mention.ts';
 import { fetchPrDiffContext } from './mention.ts';
 

@@ -1,11 +1,12 @@
-import type { ChatMessage, LlmConfig } from '../src/chat/llm.ts';
+import type { ChatMessage, LlmConfig } from '../src/chat/llm/config.ts';
 import { expect } from 'expect';
 import { describe, test } from 'node:test';
-import { chat, resolveLlmConfig, retryWithBackoff } from '../src/chat/llm.ts';
+import { chat, retryWithBackoff } from '../src/chat/llm/client.ts';
+import { resolveLlmConfig } from '../src/chat/llm/config.ts';
 import { withFetch } from './helpers/fetch-mock.ts';
 
 describe('resolveLlmConfig', () => {
-  const errorCases: ReadonlyArray<[string, NodeJS.ProcessEnv, RegExp]> = [
+  const errorCases: ReadonlyArray<[string, Record<string, string>, RegExp]> = [
     ['throws when OCR_LLM_URL is missing', { OCR_LLM_TOKEN: 't', OCR_LLM_MODEL: 'm' }, /OCR_LLM_URL/],
     ['throws when OCR_LLM_TOKEN is missing', { OCR_LLM_URL: 'https://x', OCR_LLM_MODEL: 'm' }, /OCR_LLM_TOKEN/],
     ['throws when OCR_LLM_MODEL is missing', { OCR_LLM_URL: 'https://x', OCR_LLM_TOKEN: 't' }, /OCR_LLM_MODEL/],
@@ -13,11 +14,14 @@ describe('resolveLlmConfig', () => {
 
   for (const [name, env, re] of errorCases) {
     test(name, () => {
-      expect(() => resolveLlmConfig(env)).toThrow(re);
+      const prev = { ...process.env };
+      process.env = { ...env } as NodeJS.ProcessEnv;
+      expect(() => resolveLlmConfig()).toThrow(re);
+      process.env = prev;
     });
   }
 
-  const protocolCases: ReadonlyArray<[string, NodeJS.ProcessEnv, string]> = [
+  const protocolCases: ReadonlyArray<[string, Record<string, string>, string]> = [
     [
       'respects OCR_LLM_PROTOCOL=anthropic',
       {
@@ -60,7 +64,10 @@ describe('resolveLlmConfig', () => {
 
   for (const [name, env, protocol] of protocolCases) {
     test(name, () => {
-      expect(resolveLlmConfig(env).protocol).toBe(protocol);
+      const prev = { ...process.env };
+      process.env = { ...env } as NodeJS.ProcessEnv;
+      expect(resolveLlmConfig().protocol).toBe(protocol);
+      process.env = prev;
     });
   }
 });

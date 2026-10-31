@@ -1,6 +1,6 @@
 import { expect } from 'expect';
 import { describe, test } from 'node:test';
-import { postReview } from '../src/output/github-review.ts';
+import { postReview } from '../src/github/reviews.ts';
 import { createCaptures, makeFakeOctokit, toOctokit } from './helpers/fake-octokit.ts';
 import { PATCH, inlineFinding, multiLineFinding, summaryFinding } from './helpers/fixtures.ts';
 

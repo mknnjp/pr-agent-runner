@@ -1,5 +1,5 @@
 import type { Octokit, RestEndpointMethodTypes } from '@octokit/rest';
-import type { RepoRef } from '../types.ts';
+import type { RepoRef } from '../types/cli.ts';
 
 type Files = RestEndpointMethodTypes['pulls']['listFiles']['response']['data'];
 type PullData = RestEndpointMethodTypes['pulls']['get']['response']['data'];

@@ -1,9 +1,10 @@
 import type { Octokit } from '@octokit/rest';
-import type { LlmConfig, ChatMessage } from './llm.ts';
-import { chat } from './llm.ts';
+import type { LlmConfig, ChatMessage } from './llm/config.ts';
+import { chat } from './llm/client.ts';
 import type { PrContext } from './mention.ts';
 import { buildPrChatMessages } from './prompt-context.ts';
-import type { RepoRef } from '../types.ts';
+import type { RepoRef } from '../types/cli.ts';
+import { getOcrLanguage } from '../config/env.ts';
 
 const SYSTEM_PROMPT = `You are a code review assistant operating on Pull Requests.
 You work in conjunction with OpenCodeReview (OCR), a code review tool, and answer questions by referencing the PR diff and metadata.
@@ -16,7 +17,7 @@ Rules:
 - Be concise and practical. Avoid verbose preambles.`;
 
 const buildSystemPrompt = (): string => {
-  const language = process.env.OCR_LANGUAGE;
+  const language = getOcrLanguage();
   if (language) {
     return `${SYSTEM_PROMPT}\n\nAdditional instruction: Always respond in ${language}.`;
   }
@@ -51,7 +52,7 @@ export const postChatReply = async (
   botMention = '@opencode-review',
   commentId?: number,
 ): Promise<void> => {
-  const language = process.env.OCR_LANGUAGE;
+  const language = getOcrLanguage();
   const label = language ? `${botMention} (${language})` : botMention;
   const body = `${label} reply:\n\n${answer}`;
   await octokit.rest.issues.createComment({

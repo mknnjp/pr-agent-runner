@@ -1,6 +1,6 @@
-import type { CliConfig, CliDeps } from './types.ts';
+import type { CliConfig, CliDeps } from './types/cli.ts';
 import { pathToFileURL } from 'node:url';
-import { setFailed, setOutput as coreSetOutput } from '@actions/core';
+import { setFailed } from '@actions/core';
 import { parseConfig } from './config.ts';
 import { runReview } from './commands/review.ts';
 import { runMention } from './commands/mention.ts';
