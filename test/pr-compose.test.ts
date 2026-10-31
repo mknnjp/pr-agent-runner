@@ -1,4 +1,4 @@
-import type { LlmConfig } from '../src/chat/llm.ts';
+import type { LlmConfig } from '../src/chat/llm/config.ts';
 import type { PrContext } from '../src/chat/mention.ts';
 import { expect } from 'expect';
 import { describe, test } from 'node:test';

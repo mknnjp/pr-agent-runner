@@ -1,6 +1,6 @@
 import { expect } from 'expect';
 import { describe, test } from 'node:test';
-import { buildCommentBody, escapeMarkdown } from '../src/output/markdown.ts';
+import { buildCommentBody, escapeMarkdown } from '../src/github/markdown.ts';
 import type { Finding } from '../src/schemas/finding.ts';
 
 const escapeCases: ReadonlyArray<[string, string | undefined, string]> = [
